@@ -23,6 +23,10 @@ def generate_launch_description():
             executable='braitenberg',
             namespace='tb3_1',
             name='braitenberg'),
+        launch_ros.actions.Node(
+            package='scoring',
+            executable='scoring',
+            name='scoring'),
         # launch_ros.actions.Node(
         #     package='multi_robot_challenge_23',
         #     executable='bug2',
