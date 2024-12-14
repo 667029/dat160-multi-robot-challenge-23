@@ -28,11 +28,10 @@ setup(
     entry_points={
         'console_scripts': [
             'marker_recognition = multi_robot_challenge_23.marker_pose:main',
-            'braitenberg = multi_robot_challenge_23.braitenberg:main',
-            'report_marker = multi_robot_challenge_23.report_marker:main',
-            'bug2 = multi_robot_challenge_23.bug2:main', 
-            'goToPoint = multi_robot_challenge_23.goToPoint:main', 
-            'wallFollower = multi_robot_challenge_23.wallFollower:main',        
+            'robot_controller = multi_robot_challenge_23.robot_controller:main',
+            'position_publisher = multi_robot_challenge_23.position_publisher:main',
+            'marker_detection_node = multi_robot_challenge_23.marker_detection_node:main',
+            'coordination = multi_robot_challenge_23.coordination:main',         
             ],
     },
 )
