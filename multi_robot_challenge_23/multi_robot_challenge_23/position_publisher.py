@@ -10,15 +10,21 @@ class PositionPublisherNode(Node):
     def __init__(self):
         super().__init__('position_publisher')
 
-        self.pub_position = self.create_publisher(Point, 'robot_position', 10)
+        self.pub_positions = self.create_publisher(PoseStamped, '/robot_positions', 10)
 
         self.sub_odom = self.create_subscription(Odometry, 'odom', self.odom_callback, 10)
 
-        self.timer= self.create_timer(1.0, self.publisher_controller)
+        self.radius = 1.0
+
+        self.position = PoseStamped()
+
 
     def odom_callback(self, msg):
-        self.position = msg.pose.pose.position 
-        orientation_q = msg.pose.pose.orientation
+        self.position.header.frame_id = self.get_name()
+        self.position.header.stamp = self.get_clock().now().to_msg()
+        self.position.pose.position = msg.pose.pose.position 
+        self.position.pose.orientation = msg.pose.pose.orientation
+        orientation_q = self.position.pose.orientation
         quaternion = (
             orientation_q.x,
             orientation_q.y,
@@ -26,11 +32,7 @@ class PositionPublisherNode(Node):
             orientation_q.w)
         euler = euler_from_quaternion(quaternion)
         self.yaw = euler[2]
-
-    def publisher_controller(self):
-        position_msg = Point()
-        position_msg = self.position
-        self.pub_position.publish(position_msg)
+        self.pub_positions.publish(self.position)
 
 def main(args=None):
     rclpy.init(args=args)

@@ -7,7 +7,7 @@ from tf_transformations import euler_from_quaternion
 from gazebo_msgs.srv import GetEntityState
 from nav_msgs.msg import Odometry
 from scoring_interfaces.srv import SetMarkerPosition
-from geometry_msgs.msg import Point, Pose
+from geometry_msgs.msg import Point, PoseStamped
 from std_msgs.msg import Int64, String, Bool
 
 class CoordinationNode(Node):
@@ -18,10 +18,14 @@ class CoordinationNode(Node):
         self.inital_orientations = [0.0, 0.0, 0.0, 0.0, 0.0]
         self.robot_positions = [Point(), Point(), Point(), Point(), Point()]
         self.robot_orientations = [0.0, 0.0, 0.0, 0.0, 0.0]
-        self.robot_count = 2
+        self.robot_count = 5
+        self.ok_prox = False
 
         self.pub_ok_fire = self.create_publisher(Bool, '/tb3_0/bool_fire', 10)
         self.pub_ok_fire = self.create_publisher(Bool, '/tb3_1/bool_fire', 10)
+        self.pub_ok_fire = self.create_publisher(Bool, '/tb3_2/bool_fire', 10)
+        self.pub_ok_fire = self.create_publisher(Bool, '/tb3_3/bool_fire', 10)
+        self.pub_ok_fire = self.create_publisher(Bool, '/tb3_4/bool_fire', 10)
 
         self.create_subscription(Odometry, '/tb3_0/odom', self.clbk_tb3_0_odom, 10)
         self.create_subscription(Odometry, '/tb3_1/odom', self.clbk_tb3_1_odom, 10)
@@ -101,7 +105,10 @@ class CoordinationNode(Node):
     
     def timer_callback(self):
         msg = Bool()
-        msg.data = self.check_big_fire_proximity()
+        if self.check_big_fire_proximity():
+            self.ok_prox = True
+
+        msg.data = self.ok_prox
         self.pub_ok_fire.publish(msg)
     
 def main(args=None):

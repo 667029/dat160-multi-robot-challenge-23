@@ -21,35 +21,35 @@ class MarkerDetectionNode(Node):
         self.sub_bool_fire = self.create_subscription(Bool, 'bool_fire', self.bool_fire_callback, 10)
         self.sub_marker_id = self.create_subscription(Int64, 'marker_id', self.marker_id_callback, 10)
         self.sub_marker_pos = self.create_subscription(Pose, 'marker_map_pose', self.marker_position_callback, 10)
-        self.sub_robot_position = self.create_subscription(Point, 'robot_position', self.robot_position_callback, 10)
+        self.sub_robot_position = self.create_subscription(PoseStamped, '/robot_positions', self.robot_position_callback, 10)
 
         self.marker_id = -1
-        self.robot_pos = Point()
+        self.robot_pos = PoseStamped()
         self.marker_pos = Point()
         self.pos_accuracy = 1.5
         self.distance = None
         self.success_report = False
         self.remaining_time = 10
+        self.req_msg = False
 
         self.timer = self.create_timer(1.0, self.control_loop)
 
     def marker_id_callback(self, msg):
-        if -1 < msg.data < 4:
-            self.marker_id = msg.data
-        if msg.data == 4:
+        if -1 < msg.data < 6:
             self.marker_id = msg.data
 
     def marker_position_callback(self, msg):
         self.marker_pos = msg.position
 
     def robot_position_callback(self, msg):
-        self.robot_pos = msg
+        if msg.header.frame_id[-1:] == self.get_name()[-1:]:
+            self.robot_pos.pose.position = msg.pose.position
 
     def bool_fire_callback(self, msg):
         self.success_report = msg.data
     
     def proximity_to_marker(self):
-        self.distance = self.calculate_distance(self.robot_pos, self.marker_pos)
+        self.distance = self.calculate_distance(self.robot_pos.pose.position, self.marker_pos)
         return self.pos_accuracy > self.distance
 
     @staticmethod    
@@ -63,17 +63,19 @@ class MarkerDetectionNode(Node):
 
             
     def control_loop(self):
-
+        #self.get_logger().info('ID: ' + str(self.success_report))
         if self.proximity_to_marker() and self.marker_id == 4:
             if self.success_report is False:
-                self.req_help(True)
-            else:
-                self.req_help(False)
+                self.req_help(self.req_msg)
+            elif self.success_report:
+                self.req_msg.data = True
+                self.req_help(self.req_msg)
+
 
         if self.marker_id == -1:
             return
         
-        self.get_logger().info('ID: ' + str(self.success_report))
+        #self.get_logger().info('ID: ' + str(self.success_report))
         
         if self.proximity_to_marker():
             self.client_service()
@@ -84,12 +86,10 @@ class MarkerDetectionNode(Node):
         self.request.marker_position = self.marker_pos
         self.future = self.client.call_async(self.request)
        
-        #if self.future.result() is False:
-            #self.get_logger().info('Reporting Failed')
-            #self.success_report = False
-        #else:
-            #self.get_logger().info('Reporting Success')
-            #self.success_report = True
+        if self.future.result() is False:
+            self.get_logger().info('Reporting Failed')
+        else:
+            self.get_logger().info('Reporting Success')
 
     def wait_for_services(self):
         while not self.client.wait_for_service(timeout_sec=1.0):
