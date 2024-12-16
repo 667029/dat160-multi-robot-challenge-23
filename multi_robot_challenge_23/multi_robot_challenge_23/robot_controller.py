@@ -112,16 +112,16 @@ class RobotControllerNode(Node):
             target_angle = angle - self.yaw
             distance = self.calculate_distance(self.position.pose.position, pos)
 
-            if(distance < 1.0) and ('0' != self.get_name()[-1:]):
+            if(distance < 1.0): # and ('0' != self.get_name()[-1:]):
                 twist.linear.x = 0.4
                 twist.angular.z = self.rotate_to_angle(target_angle)
                 self.pub_cmd_vel.publish(twist)
                 return
-            elif(distance > 3.0) and ('0' != self.get_name()[-1:]):
-                twist.linear.x = 0.4
-                twist.angular.z = self.rotate_to_angle((target_angle + math.pi))
-                self.pub_cmd_vel.publish(twist)
-                return
+            # elif(distance > 3.0) and ('0' != self.get_name()[-1:]):
+                # twist.linear.x = 0.4
+                # twist.angular.z = self.rotate_to_angle((target_angle + math.pi))
+                # self.pub_cmd_vel.publish(twist)
+                # return
 
         twist.linear.x = 0.4
         twist.angular.z = 0.0
